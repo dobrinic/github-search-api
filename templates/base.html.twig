@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="{{ app.request.locale }}">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <title>{% block title %}GitHub Api Demo App{% endblock %}</title>
+
+        {% block stylesheets %}
+            {{ encore_entry_link_tags('app') }}
+        {% endblock %}
+        {% block javascripts %}
+            {{ encore_entry_script_tags('app') }}
+        {% endblock %}
+
+        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
+    </head>
+
+    <body id="{% block body_id %}{% endblock %}">
+
+        {% block header %}
+            {% set _route = app.request.get('_route') %}
+            <header>
+                <nav class="navbar navbar-light bg-light">
+                    <div class="container justify-content-between py-2">
+                        <a class="navbar-brand" href="{{ path('app_home') }}">
+                            Home
+                        </a>
+                        <form class="form-inline" action="/generate/csv">
+                            <input class="form-control mr-sm-2" name="length" type="search" placeholder="Input Search Query" aria-label="GitHub Search Term">
+                            <button class="btn btn-outline-primary my-2 my-sm-0" type="submit">Search</button>
+                        </form>
+                    </div>
+                </nav>
+            </header>
+        {% endblock %}
+
+        <div class="container body-container mt-3">
+            {% block body %}
+
+                <div class="row">
+                    <div class="col">
+                        {{ include('includes/_flash_messages.html.twig') }}
+                    </div>
+                </div>
+
+                <div class="row">
+
+                    {# <div id="sidebar" class="col-sm-3">
+                        {% block sidebar %}{% endblock %}
+                    </div> #}
+
+                    <div id="main" class="col">
+                        {% block main %}{% endblock %}
+                    </div>
+
+                </div>
+            {% endblock %}
+        </div>
+
+        {% block footer %}
+            <footer>
+                <div class="container">
+                    <div class="row">
+                        <div id="footer-copyright" class="col-md-6">
+                            <p>&copy; {{ 'now'|date('Y') }} - GitHub Api Demo App</p>
+                        </div>
+                        <div id="footer-resources" class="col-md-6">
+                            <p>
+                                <a href="" title="">
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        {% endblock %}
+    </body>
+</html>
