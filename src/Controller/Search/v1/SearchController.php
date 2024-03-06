@@ -15,8 +15,8 @@ class SearchController extends AbstractController
     #[Route('/search/v1/{provider}', name: 'app_search_v1', requirements: ['provider' => '.{2,}'])]
     public function __invoke(string $provider, Request $request, SearchProviderFactory $providerFactory, SearchServiceInterface $searchService): Response
     {
-        if (null === $term = $request->get('term')){
-            throw new Exception('search term missing');
+        if (null === $term = $request->get('term')) {
+            return $this->json(['error' => 'Term parameter is missing'], 400);
         }
 
         $searchProvider = $providerFactory->getProvider($provider);

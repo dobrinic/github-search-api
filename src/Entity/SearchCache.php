@@ -9,6 +9,8 @@ use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: SearchCacheRepository::class)]
+#[ORM\Index(columns: ["term"], name: "term_idx")]
+#[ORM\Index(columns: ["search_provider"], name: "search_provider_idx")]
 #[ApiResource]
 class SearchCache
 {
@@ -24,6 +26,9 @@ class SearchCache
 
     #[ORM\Column(type: Types::FLOAT, precision: 4, scale: 2)]
     private ?float $score = null;
+
+    #[ORM\Column(length: 50)]
+    private ?string $searchProvider = null;
 
     public function getId(): ?int
     {
@@ -50,6 +55,18 @@ class SearchCache
     public function setScore(float $score): static
     {
         $this->score = $score;
+
+        return $this;
+    }
+
+    public function getSearchProvider(): ?string
+    {
+        return $this->searchProvider;
+    }
+
+    public function setSearchProvider(string $searchProvider): static
+    {
+        $this->searchProvider = $searchProvider;
 
         return $this;
     }

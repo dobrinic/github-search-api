@@ -16,7 +16,7 @@ class GithubSearchProvider implements SearchProviderInterface
         if (null === $searchUrl = $this->parameterBag->get('github_provider_search_url')) {
             throw new \RuntimeException('github_provider_search_url parameter is not defined.');
         }
-        
+
         return $searchUrl;
     }
 
