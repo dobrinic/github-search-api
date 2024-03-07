@@ -16,14 +16,14 @@ class SearchController extends AbstractController
     public function __invoke(string $provider, Request $request, SearchProviderFactory $providerFactory, SearchServiceInterface $searchService): JsonResponse
     {
         if (null === $term = $request->get('term')) {
-            return $this->json(['error' => 'Term parameter is missing'], 400);
+            return new JsonResponse(['error' => 'Term parameter is missing'], 400);
         }
 
         try {
             $searchProvider = $providerFactory->getProvider($provider);
             $result = $searchService->getResult($searchProvider, $term);
         } catch (Exception $e) {
-            return $this->json(['error' => $e->getMessage()]);
+            return new JsonResponse(['error' => $e->getMessage()]);
         }
 
         return $this->json($result);

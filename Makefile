@@ -30,5 +30,8 @@ console:
 cache:
 	docker compose -p git_search exec -u www-data app php bin/console cache:clear
 
+test:
+	docker compose -p git_search exec -u www-data app php vendor/bin/phpunit
+
 bash:
 	@docker compose -p git_search exec -it app bash
