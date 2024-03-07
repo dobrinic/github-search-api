@@ -3,15 +3,20 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
 use App\Repository\SearchCacheRepository;
 use Doctrine\DBAL\Types\Types;
 use Gedmo\Timestampable\Traits\TimestampableEntity;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: SearchCacheRepository::class)]
 #[ORM\Index(columns: ["term"], name: "term_idx")]
 #[ORM\Index(columns: ["search_provider"], name: "search_provider_idx")]
-#[ApiResource]
+#[ApiResource(
+    operations: [new Get()],
+    normalizationContext: ['groups' => ['cache:read']],
+)]
 class SearchCache
 {
     use TimestampableEntity;
@@ -21,12 +26,15 @@ class SearchCache
     #[ORM\Column]
     private ?int $id = null;
 
+    #[Groups(['cache:read'])]
     #[ORM\Column(length: 50)]
     private ?string $term = null;
 
+    #[Groups(['cache:read'])]
     #[ORM\Column(type: Types::FLOAT, precision: 4, scale: 2)]
     private ?float $score = null;
 
+    #[Groups(['cache:read'])]
     #[ORM\Column(length: 50)]
     private ?string $searchProvider = null;
 

@@ -2,13 +2,13 @@
 
 namespace App\Service\SearchProvider;
 
-use App\Service\SearchProvider\SearchProviderInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class TwitterSearchProvider implements SearchProviderInterface
 {
     public function __construct(private ParameterBagInterface $parameterBag)
     {
+        throw new \RuntimeException('Not yet implemented');
     }
 
     public function getSearchUrl(): string

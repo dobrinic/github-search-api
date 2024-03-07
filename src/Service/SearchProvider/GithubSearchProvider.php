@@ -2,12 +2,11 @@
 
 namespace App\Service\SearchProvider;
 
-use App\Service\SearchProvider\SearchProviderInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 class GithubSearchProvider implements SearchProviderInterface
 {
-    public function __construct(private ParameterBagInterface $parameterBag)
+    public function __construct(private readonly ParameterBagInterface $parameterBag)
     {
     }
 

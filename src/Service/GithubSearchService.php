@@ -5,68 +5,95 @@ namespace App\Service;
 use App\Entity\SearchCache;
 use App\Service\SearchProvider\SearchProviderInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class GithubSearchService implements SearchServiceInterface
 {
+    private const POSITIVE_INDICATOR = 'rocks';
+    private const NEGATIVE_INDICATOR = 'sucks';
+
     public function __construct(
-        private HttpClientInterface    $client,
-        private EntityManagerInterface $entityManager
+        private readonly HttpClientInterface    $client,
+        private readonly EntityManagerInterface $entityManager
     )
     {
     }
 
-    public function getResult(SearchProviderInterface $searchProvider, string $term): array
+    public function getResult(SearchProviderInterface $searchProvider, string $searchTerm): SearchCache
     {
-        $record = $this->entityManager->getRepository(SearchCache::class)->findOneBy(['searchProvider' => $searchProvider->getName(), 'term' => $term]);
+        $record = $this->entityManager->getRepository(SearchCache::class)->findOneBy(['searchProvider' => $searchProvider->getName(), 'term' => $searchTerm]);
 
         if ($record !== null) {
-            return $record; //TODO: return formatted response
+            return $record;
         }
 
-        $rocksTerm = strtolower($term) . ' rocks';
-        $rocksQuery = sprintf('"%s" type:issue', $rocksTerm);
+        $positiveSearchTerm = strtolower($searchTerm) . ' ' . self::POSITIVE_INDICATOR;
+        $negativeSearchTerm = strtolower($searchTerm) . ' ' . self::NEGATIVE_INDICATOR;
 
-        $positiveResponse = $this->client->request('GET', $searchProvider->getSearchUrl(), [
-            'query' => ['q' => $rocksQuery],
-            'headers' => ['Accept' => 'application/vnd.github.text-match+json']
-        ]);
+        $positive = $this->search($searchProvider->getSearchUrl(), $positiveSearchTerm);
+        $negative = $this->search($searchProvider->getSearchUrl(), $negativeSearchTerm);
 
-        $sucksTerm = strtolower($term) . ' sucks';
-        $sucksQuery = sprintf('"%s" type:issue', $sucksTerm);
+        $positiveCount = $this->countOccurrences($positive, $positiveSearchTerm);
+        $negativeCount = $this->countOccurrences($negative, $negativeSearchTerm);
 
-        $negativeResponse = $this->client->request('GET', $searchProvider->getSearchUrl(), [
-            'query' => ['q' => $sucksQuery],
-            'headers' => ['Accept' => 'application/vnd.github.text-match+json']
-        ]);
+        $totalCount = $positiveCount + $negativeCount;
 
-        $statusCode = $positiveResponse->getStatusCode();
-        $content = $positiveResponse->getContent();
-        $resultsArray = $positiveResponse->toArray();
-        $totalResults = $resultsArray['total_count'];
+        $score = ($totalCount > 0) ? ($positiveCount / $totalCount) * 10 : 0;
+        $scoreRatio = round(max(0, min(10, $score)), 2);
 
-        if ($totalResults === 0) {
-            return [0]; // No results, return score as 0
+        $newRecord = new SearchCache();
+        $newRecord
+            ->setSearchProvider($searchProvider->getName())
+            ->setScore($scoreRatio)
+            ->setTerm($searchTerm);
+
+        $this->entityManager->persist($newRecord);
+        $this->entityManager->flush();
+
+        return $newRecord;
+
+    }
+
+    private function search(string $url, string $searchTerm): array
+    {
+        $query = sprintf('"%s" type:issue', $searchTerm);
+
+        try {
+            $response = $this->client->request('GET', $url, [
+                'query' => ['q' => $query],
+                'headers' => ['Accept' => 'application/vnd.github.v3+json']
+            ]);
+
+            $resultsArray = $response->toArray();
+
+        } catch (ClientExceptionInterface|DecodingExceptionInterface|RedirectionExceptionInterface|ServerExceptionInterface|TransportExceptionInterface $e) {
+            return ['total_count' => 0];// depending on the app requirements we could return specific message, or a generic one instead of result=0
         }
 
-        $positiveResults = 0;
-        $negativeResults = 0;
+        return $resultsArray;
+    }
 
-        foreach ($resultsArray['items'] as $item) {
+    private function countOccurrences(array $results, string $searchTerm): int
+    {
+        if ($results['total_count'] === 0) {
+            return 0;
+        }
+
+        $hits = 0;
+        foreach ($results['items'] as $item) {
             $jsonString = json_encode($item);
             $jsonStringLower = strtolower($jsonString);
 
-            $count = substr_count($jsonStringLower, $rocksTerm);
+            $count = substr_count($jsonStringLower, $searchTerm);
 
-            $positiveResults += $count;
+            $hits += $count;
         }
 
-        $score = ($positiveResults - $negativeResults) / $totalResults * 10;
-        $scoreRatio = max(0, min(10, $score));
-
-        dd($scoreRatio);
-
-        return $resultsArray;
-
+        return $hits;
     }
 }
