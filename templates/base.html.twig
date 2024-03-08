@@ -25,9 +25,13 @@
                         <a class="navbar-brand" href="{{ path('app_home') }}">
                             Home
                         </a>
-                        <form id="search" class="form-inline" data-action="{{ path('app_search_v1', {'provider' : 'github'}) }}">
-                            <input class="form-control mr-sm-2" name="term" type="search" placeholder="Input Search Query" aria-label="GitHub Search Term">
-                            <button class="btn btn-outline-primary my-2 my-sm-0" type="submit">Search</button>
+                        <form id="search-v1" class="form-inline" data-path="{{ path('app_search_v1', {'searchProvider' : 'github'}) }}">
+                            <input class="form-control mr-sm-2" name="term" type="search" placeholder="Input Search Query v1" aria-label="GitHub Search Term - Version 1">
+                            <button class="btn btn-outline-primary my-2 my-sm-0" type="submit">Search v1</button>
+                        </form>
+                        <form id="search-v2" class="form-inline" data-path="{{ path('app_search_v2', {'searchProvider' : 'github'}) }}">
+                            <input class="form-control mr-sm-2" name="term" type="search" placeholder="Input Search Query v2" aria-label="GitHub Search Term - Version 2">
+                            <button class="btn btn-outline-primary my-2 my-sm-0" type="submit">Search v2</button>
                         </form>
                     </div>
                 </nav>
