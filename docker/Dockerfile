@@ -1,5 +1,7 @@
 FROM php:8.2-fpm
 
+ARG USER_ID=1000
+
 WORKDIR /var/www/html
 
 RUN apt-get update && apt-get install -y \
@@ -12,23 +14,12 @@ RUN curl -sL https://deb.nodesource.com/setup_20.x | bash -\
     && apt-get install -y nodejs \
     && npm install -g yarn
 
-RUN curl --silent --show-error https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && mkdir /var/www/.composer \
-    && chown 1000:www-data /var/www/.composer \
-    && mkdir /var/www/.yarn \
-    && mkdir /var/www/.cache \
-    && mkdir /var/www/.npm \
-    && touch /var/www/.yarnrc \
-    && chown 1000:www-data /var/www/.yarn \
-    && chown 1000:www-data /var/www/.yarnrc \
-    && chown 1000:www-data /var/www/.npm \
-    && chown 1000:www-data /var/www/.cache
+COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 
-WORKDIR /var/www/html
+RUN useradd -u ${USER_ID} -m appuser && echo "alias ll='ls -al'" >> /home/appuser/.bashrc
 
-RUN usermod -u 1000 www-data
-
-USER 1000
+USER appuser
 
 EXPOSE 9000
+
 CMD ["php-fpm"]

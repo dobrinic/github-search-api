@@ -19,7 +19,6 @@ yarn-error.log
 
 /.idea/
 /.DS_Store
-/notes.md
 
 ###> phpunit/phpunit ###
 /phpunit.xml
